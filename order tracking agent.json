@@ -1,0 +1,174 @@
+{
+  "name": "order tracking agent",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -208,
+        16
+      ],
+      "id": "f836d873-8b1f-4b80-aa96-bd6508e55031",
+      "name": "When chat message received",
+      "webhookId": "648ac769-86b9-4b3e-b151-32ed2872f33d"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Please check my order using the Search_Order tool and give me the latest update...\n\n{{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "Tum ek professional order tracking customer support assistant ho.\n\nTumhara kaam:\n- Customer se unka Order ID ya Email address maango agar unhone abhi tak nahi diya\n- Jab customer Order ID ya Email de, tumhein \"Get Order Details\" tool zaroor use karna hai Google Sheet se unka data dhoondne ke liye\n- Kabhi bhi generic ya guess kiya hua jawab mat do — hamesha pehle tool call karo, phir uske result ke hisab se jawab do\n- Agar tool ko koi matching order na mile, to customer ko politely batao ke Order ID/email check kar ke dobara try karein\n- Agar order mil jaye, to customer ko uski status, tracking details, aur estimated delivery date clearly batao\n\nHamesha friendly aur professional tone use karo."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        16,
+        16
+      ],
+      "id": "8ebf2496-c8eb-46b9-9fe1-35288a7b206d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/18URK1LhLhT1cN5engyczB9cHv4hQoJLgrxIaW5zvevU/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18URK1LhLhT1cN5engyczB9cHv4hQoJLgrxIaW5zvevU/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Order ID",
+              "lookupValue": "={{ $fromAI('order_id', 'Customer ne diya hua Order ID') }}"
+            },
+            {
+              "lookupColumn": "Email",
+              "lookupValue": "={{ $fromAI('email', 'Customer ne diya hua email address') }}"
+            }
+          ]
+        },
+        "combineFilters": "OR",
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        256,
+        192
+      ],
+      "id": "b9c98a7a-7743-49ea-8bc3-9e9dc6d10c42",
+      "name": "Search_Order",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "XkYb1eOfyv4fFF84",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        80,
+        192
+      ],
+      "id": "34f40877-0e28-4866-aaba-8da46dbe560d",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        224
+      ],
+      "id": "17c2aeb5-7bb7-4b99-9f8d-9199c02994c7",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "yFxUxLg73C9umVsk",
+          "name": "Groq account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search_Order": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "e8366f62-fc77-4cb2-95df-5c907bca1eb1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "303cfb488005a9c62ec6a8036c07b4883d602f5c3c87544059fa308266474dd3"
+  },
+  "nodeGroups": [],
+  "id": "bzz4ipr7dtiqtOIN",
+  "tags": []
+}
